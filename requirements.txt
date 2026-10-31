@@ -1,0 +1,24 @@
+# 核心 Agent 框架
+langchain-core>=0.3.0
+langgraph>=0.2.0
+langchain-openai>=0.2.0
+
+# Web 服务
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+
+# 工具
+python-dotenv>=1.0.0
+httpx>=0.27.0
+
+# 向量 / 检索：内置纯 Python 向量存储，无额外依赖
+# 生产级向量库（需要时再装）：chromadb / faiss-cpu
+
+# 可选：生产级向量库（需要时再装）
+# chromadb>=0.5.0
+# faiss-cpu>=1.8.0
+
+# 可选：评测观测
+# langsmith

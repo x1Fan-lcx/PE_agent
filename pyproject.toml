@@ -1,0 +1,34 @@
+[project]
+name = "pe-agent"
+version = "0.1.0"
+description = "PE 盘系统修复助手 Agent 化项目：LLM 驱动的系统运维 Agent（LangGraph + RAG + Skill 框架）"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "李晨希" }]
+keywords = ["agent", "langgraph", "rag", "mcp", "system-repair", "llm"]
+dependencies = [
+    "langchain-core>=0.3.0",
+    "langgraph>=0.2.0",
+    "langchain-openai>=0.2.0",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.0",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
