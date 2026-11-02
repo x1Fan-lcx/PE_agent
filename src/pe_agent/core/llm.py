@@ -35,12 +35,16 @@ class OpenAIChatModel(ChatModel):
             raise RuntimeError(
                 "使用真实 LLM 需要安装 langchain-openai：pip install langchain-openai"
             ) from e
-        self._model = ChatOpenAI(
+        kwargs: dict[str, Any] = dict(
             model=s.llm_model,
             api_key=s.llm_api_key,
             base_url=s.llm_api_base,
             temperature=s.llm_temperature,
         )
+        # DeepSeek 等模型的思考模式开关（关掉拿确定性 JSON）
+        if s.llm_disable_thinking:
+            kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
+        self._model = ChatOpenAI(**kwargs)
 
     def invoke(self, messages: list[dict[str, str]]) -> str:
         resp = self._model.invoke(messages)

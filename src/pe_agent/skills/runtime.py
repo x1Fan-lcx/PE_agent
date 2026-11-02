@@ -54,6 +54,11 @@ class SkillRuntime:
                 if tool is None:
                     return SkillResult(success=False, message=f"未知工具: {step.tool}")
                 step_params = _resolve_params(step.params, params)
+                missing = tool.validate_params(step_params)
+                if missing:
+                    return SkillResult(
+                        success=False, message=f"步骤 {step.tool} 参数缺失: {', '.join(missing)}"
+                    )
                 guard_dec = self._guard.check_tool_call(
                     step.tool, step_params, tool.risk_level
                 )
@@ -61,7 +66,13 @@ class SkillRuntime:
                     return SkillResult(
                         success=False, message=f"工具 {step.tool} 被拦截: {guard_dec.reason}"
                     )
-                res = tool.run(**step_params)
+                try:
+                    res = tool.run(**step_params)
+                except Exception as e:
+                    return SkillResult(
+                        success=False, message=f"步骤 {step.tool} 执行异常: {e}",
+                        data={"audit": ctx.audit},
+                    )
                 ctx.audit.append(
                     {"tool": step.tool, "params": step_params,
                      "success": res.success, "message": res.message}

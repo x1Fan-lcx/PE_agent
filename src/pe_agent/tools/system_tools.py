@@ -128,9 +128,11 @@ class ReadLogTool(Tool):
         ]
         if keyword:
             lines = [l for l in lines if keyword.lower() in l.lower()]
+        # 把日志内容直接放进 message，让 LLM 能据此诊断（而非只给"命中 N 条"）
+        detail = "\n".join(f"  - {l}" for l in lines) if lines else "（无匹配日志）"
         return ActionResult(
             success=True,
-            message=f"[dry-run] 读取 {log_path} 命中 {len(lines)} 条",
+            message=f"[dry-run] 读取 {log_path}（关键字={keyword or '无'}）命中 {len(lines)} 条：\n{detail}",
             data={"lines": lines, "log_path": log_path},
         )
 
@@ -146,10 +148,17 @@ class ReadFileTool(Tool):
     risk_level = "read_only"
 
     def run(self, **kwargs: Any) -> ActionResult:
+        path = kwargs["path"]
+        # 模拟常见配置内容，让 LLM 能据此判断（而非空洞的"已读取"）
+        mock = {
+            "/etc/fstab": "UUID=1234-ABCD / ext4 defaults 0 1\nUUID=5678-EFGH /boot ext4 defaults 0 2",
+            "/boot/grub/grub.cfg": "set root='hd0,gpt1'\nlinux /vmlinuz root=UUID=1234-ABCD",
+        }
+        content = mock.get(path, f"# {path} 内容（mock）")
         return ActionResult(
             success=True,
-            message=f"[dry-run] 读取 {kwargs['path']}",
-            data={"path": kwargs["path"], "content": "# mock config content"},
+            message=f"[dry-run] 读取 {path}：\n{content}",
+            data={"path": path, "content": content},
         )
 
 

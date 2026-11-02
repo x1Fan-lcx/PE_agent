@@ -87,14 +87,8 @@ class RepairAgent:
 
     def _plan(self, state: AgentState) -> dict[str, Any]:
         """规划：LLM 依据工具清单 + RAG 上下文 + 观察信息，决策下一步动作。"""
-        manifest = "\n".join(
-            f"- {t['name']}: {t['description']} (risk={t['risk_level']})"
-            for t in list_tools()
-        )
-        skill_manifest = "\n".join(
-            f"- {s['name']}: {s['description']} (risk={s['risk_level']})"
-            for s in self.registry.list()
-        )
+        manifest = "\n".join(self._fmt_tool(t) for t in list_tools())
+        skill_manifest = "\n".join(self._fmt_skill(s) for s in self.registry.list())
         prompt = SYSTEM_PROMPT.substitute(
             tool_manifest=manifest + "\n\n可用技能(Skill)：\n" + skill_manifest,
             rag_context=state.get("rag_context", ""),
@@ -105,6 +99,29 @@ class RepairAgent:
         action = parse_json(raw)
         self.guard.audit({"trace_id": "", "node": "plan", "action": action.get("action")})
         return {"pending_action": action}
+
+    @staticmethod
+    def _fmt_tool(t: dict[str, Any]) -> str:
+        """把工具元信息（含参数 schema）格式化给 LLM 看，避免漏参。"""
+        ps = t.get("params_schema", {})
+        props = ps.get("properties", {})
+        required = ps.get("required", [])
+        parts = []
+        for k, v in props.items():
+            mark = "必填" if k in required else "可选"
+            parts.append(f"{k}({mark}, {v.get('description', '')})")
+        return f"- {t['name']}: {t['description']}\n    参数: {', '.join(parts)}"
+
+    @staticmethod
+    def _fmt_skill(s: dict[str, Any]) -> str:
+        ps = s.get("params_schema", {})
+        props = ps.get("properties", {})
+        required = ps.get("required", [])
+        parts = []
+        for k, v in props.items():
+            mark = "必填" if k in required else "可选"
+            parts.append(f"{k}({mark}, {v.get('description', '')})")
+        return f"- {s['name']}: {s['description']}\n    参数: {', '.join(parts)}"
 
     def _act(self, state: AgentState) -> dict[str, Any]:
         """执行：按动作名解析为工具或技能，走安全护栏后执行。"""
@@ -132,10 +149,16 @@ class RepairAgent:
         # 优先解析为工具，其次解析为技能
         tool = get_tool(name)
         if tool is not None:
+            missing = tool.validate_params(params)
+            if missing:
+                return self._fail(name, f"参数缺失: {', '.join(missing)}", next_step)
             gd = self.guard.check_tool_call(name, params, tool.risk_level)
             if not gd.allowed:
                 return self._fail(name, f"工具被拦截: {gd.reason}", next_step)
-            result = tool.run(**params)
+            try:
+                result = tool.run(**params)
+            except Exception as e:  # LLM 输出不可靠，工具异常不拖垮整个图
+                return self._fail(name, f"工具执行异常: {e}", next_step)
             self.guard.audit({"trace_id": "", "node": "act", "tool": name,
                               "allowed": True, "success": result.success})
             return self._record(name, result.message, result.success, result.data, next_step)
@@ -144,7 +167,10 @@ class RepairAgent:
         if skill_cls is not None:
             if not self.manager.is_enabled(name):
                 return self._fail(name, f"技能 {name} 已被禁用", next_step)
-            result = self.runtime.execute(skill_cls(), params)
+            try:
+                result = self.runtime.execute(skill_cls(), params)
+            except Exception as e:
+                return self._fail(name, f"技能执行异常: {e}", next_step)
             return self._record(name, result.message, result.success, result.data, next_step)
 
         return self._fail(name, "未知动作：既不是工具也不是技能", next_step)

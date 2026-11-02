@@ -140,7 +140,7 @@ stateDiagram-v2
 
 ```
 PE_saver_agent/
-├── src/pe_agent/
+├── src/pe_agent/        # Python Agent 核心（LangGraph + RAG + Skill 框架）
 │   ├── core/            # 配置 / LLM 抽象(真实+Fake) / Prompt 模板 / 嵌入层 / 工具函数
 │   ├── graph/           # LangGraph 状态机（Agent Loop 主循环）
 │   ├── memory/          # 短期记忆（轨迹缓冲）+ 长期记忆（向量库）
@@ -151,12 +151,18 @@ PE_saver_agent/
 │   ├── evaluation/      # 故障注入评测集 + ClawEval 指标 + OpenJudge 风格 grader
 │   ├── security/        # A.I.G 风格安全管控（输入/工具/输出三闸 + 审计）
 │   └── api/             # FastAPI 服务层
+├── java-backend/        # ★ Java 后端（Spring Boot 3 + MyBatis-Plus + H2 + WebClient）
+├── frontend/            # ★ Vue3 前端（Vite + Element Plus + Axios）
 ├── scripts/             # demo.py / run_eval.py
 ├── tests/               # 冒烟 + Skill 框架 + 安全 测试
-├── docs/                # 架构/评测/调优/安全/选型/方法提炼/简历 七份文档
+├── docs/                # 架构/评测/调优/安全/选型/方法提炼/简历/Java 计划 等文档
 ├── pyproject.toml       # 项目元信息（可 pip install -e .）
 └── requirements.txt
 ```
+
+> **全栈架构**：`Vue3 前端 → Spring Boot(Java) 后端 → Python Agent`，Java 用 WebClient 调 Python，
+> 数据库用 H2（零安装），覆盖「Agent 岗 + Java 后端岗 + 前端」三条技术线。
+> 启动步骤见 [docs/09_java_run_guide.md](docs/09_java_run_guide.md)。
 
 ---
 

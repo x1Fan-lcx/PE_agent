@@ -43,3 +43,13 @@ class Tool(ABC):
             "params_schema": self.params_schema,
             "risk_level": self.risk_level,
         }
+
+    def validate_params(self, params: dict[str, Any]) -> list[str]:
+        """校验入参，返回缺失的必填字段列表（LLM 输出不可靠，工具层要容错）。"""
+        required = self.params_schema.get("required", [])
+        missing = []
+        for r in required:
+            v = params.get(r)
+            if v is None or v == "":
+                missing.append(r)
+        return missing

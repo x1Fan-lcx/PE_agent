@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: pe-agent-java
+  # H2 内存数据库（零安装）。切 MySQL：改 url/username/password + 加 mysql 驱动依赖
+  datasource:
+    url: jdbc:h2:mem:peagent;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true        # 浏览器访问 http://localhost:8080/h2-console 可看数据
+      path: /h2-console
+  sql:
+    init:
+      mode: always         # 启动时执行 schema.sql 建表
+      schema-locations: classpath:schema.sql
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl   # 打印 SQL，方便学习
+  global-config:
+    db-config:
+      id-type: auto
+
+# 调 Python Agent 的地址
+agent:
+  python-url: http://127.0.0.1:8000

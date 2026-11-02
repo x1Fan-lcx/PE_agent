@@ -23,7 +23,8 @@ class SkillRegistry:
         """导出所有已注册技能的元信息（供 Agent prompt 注入 / 管理接口展示）。"""
         return [
             {"name": m.name, "version": m.version, "description": m.description,
-             "risk_level": m.risk_level, "permission": m.permission, "tags": m.tags}
+             "risk_level": m.risk_level, "permission": m.permission, "tags": m.tags,
+             "params_schema": m.params_schema}
             for m in (c.manifest for c in self._skills.values())
         ]
 

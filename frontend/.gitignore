@@ -1,0 +1,5 @@
+# 依赖目录，不提交
+node_modules/
+dist/
+*.local
+.DS_Store

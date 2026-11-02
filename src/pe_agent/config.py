@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     llm_model: str = "qwen-plus"
     llm_temperature: float = 0.0
+    # DeepSeek 等默认开启思考模式的模型，关掉以拿到确定性 JSON 输出并省 token
+    llm_disable_thinking: bool = False
 
     # ---- 嵌入（RAG） ----
     embed_api_base: str = ""
